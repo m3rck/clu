@@ -1,5 +1,7 @@
 import os
+import sys
 import json
+import getopt
 import tornado.httpserver
 import tornado.ioloop
 import tornado.options
@@ -7,9 +9,9 @@ import tornado.web
 import tornado.escape
 from tornado.options import define, options
 
-db = None
+db = {}
 define("port", default=8888, help="run on the given port", type=int)
-homepath = '.'
+
 
 class JsonHandler(tornado.web.RequestHandler):
 
@@ -122,9 +124,6 @@ class MainHandler(tornado.web.RequestHandler):
 		prefix = self.routes.get(exploded[0]) or './'
 		path = "%s%s" % (prefix, request)
 
-		#if len(exploded[-1]):
-		#	path = '%s%s' % (path, 'index.html')
-
 		opt = 'rb'
 		if '.json' in request:
 			self.set_header('Content-Type', 'application/json')
@@ -138,6 +137,9 @@ class MainHandler(tornado.web.RequestHandler):
 		elif '.css' in request:
 			self.set_header('Content-Type', 'text/css')
 			opt = 'r'
+		elif '.html' in request:
+			self.set_header('Content-Type', 'text/html')
+			opt = 'r'
 		elif '.png' in request:
 			self.set_header('Content-Type', 'image/png')
 		elif '.gif' in request:
@@ -150,13 +152,29 @@ class MainHandler(tornado.web.RequestHandler):
 		self.write(data)
 
 
-def main():
+def main(argv):
 
 	global db
+	filename = None
+	homepath = '.'
+	
+	try:
+		opts, args = getopt.getopt(argv, "h:f:p")
+	except getopt.GetoptError:
+		usage()
+		sys.exit(2)
+	for opt, arg in opts:
+		if opt == '-h':
+			usage()
+			sys.exit(0)
+		elif opt == ('-f'):
+			filename = arg
+		elif opt == ('-p'):
+			homepath = arg
 
-	# TODO make JSON data an argument
-	with open('data.json', 'r') as f:
-		db = json.loads(f.read());
+	if filename is not None:
+		with open(filename, 'r') as f:
+			db = json.loads(f.read());
 
 	os.chdir(homepath)
 
@@ -171,4 +189,4 @@ def main():
 
 
 if __name__ == "__main__":
-	main()
+	main(sys.argv[1:])
