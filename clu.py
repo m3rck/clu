@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 import os
 import sys
 import json
@@ -7,6 +9,7 @@ import tornado.ioloop
 import tornado.options
 import tornado.web
 import tornado.escape
+import tornado.websocket
 from tornado.options import define, options
 
 db = {}
@@ -102,6 +105,7 @@ class JsonHandler(tornado.web.RequestHandler):
 		print(">> uri: %s path: %s resp: %s ident: %s" % (uri, path, response, ident))
 		self.write(response)
 
+
 class MainHandler(tornado.web.RequestHandler):
 
 	routes = {
@@ -152,6 +156,17 @@ class MainHandler(tornado.web.RequestHandler):
 		self.write(data)
 
 
+class EchoWebSocket(tornado.websocket.WebSocketHandler):
+	def open(self, *args):
+		print("WebSocket opened")
+
+	def on_message(self, message):
+		self.write_message(u"You said: " + message)
+
+	def on_close(self):
+		print("WebSocket closed")
+
+
 def main(argv):
 
 	global db
@@ -180,6 +195,7 @@ def main(argv):
 
 	tornado.options.parse_command_line()
 	application = tornado.web.Application([
+		(r"/ws/(.*)", EchoWebSocket),
 		(r"/api/?(.*)", JsonHandler),
 		(r"/(.*)", MainHandler),
 	])
