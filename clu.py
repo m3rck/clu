@@ -13,7 +13,7 @@ import tornado.websocket
 from tornado.options import define, options
 
 db = {}
-define("port", default=8888, help="run on the given port", type=int)
+define("port", default=9999, help="run on the given port", type=int)
 
 
 class JsonHandler(tornado.web.RequestHandler):
@@ -157,6 +157,13 @@ class MainHandler(tornado.web.RequestHandler):
 
 
 class EchoWebSocket(tornado.websocket.WebSocketHandler):
+	"""
+	> x = new WebSocket("ws://localhost:8888/ws/")
+	> x.onmessage = function(e) {console.log("recv> " + e.data); }
+	> x.send("fooo")
+	> recv> You said: fooo
+	"""
+
 	def open(self, *args):
 		print("WebSocket opened")
 
@@ -172,7 +179,7 @@ def main(argv):
 	global db
 	filename = None
 	homepath = '.'
-	
+
 	try:
 		opts, args = getopt.getopt(argv, "h:f:p")
 	except getopt.GetoptError:
